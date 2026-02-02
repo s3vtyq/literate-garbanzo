@@ -42,6 +42,14 @@ func Handler(inboundType inbound.InboundType, c *gin.Context) {
 	metrics := NewRelayMetrics(internalRequest.Model)
 	metrics.SetInternalRequest(internalRequest)
 	metrics.SetAPIKeyID(apiKeyID)
+
+	if c.GetBool("quota_exceeded") {
+		err := fmt.Errorf("quota exhausted")
+		metrics.Save(c.Request.Context(), false, err, 0)
+		resp.Error(c, http.StatusForbidden, "quota exhausted")
+		return
+	}
+
 	// 获取通道分组
 	group, err := op.GroupGetMap(internalRequest.Model, c.Request.Context())
 	if err != nil {

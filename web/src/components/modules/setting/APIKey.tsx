@@ -97,6 +97,7 @@ function APIKeyForm({ apiKey, isPending, submitLabel, onSubmit, onClose }: APIKe
         max_cost: apiKey?.max_cost,
         supported_models: apiKey?.supported_models,
         auto_reset_quota: apiKey?.auto_reset_quota ?? false,
+        is_flat_fee: apiKey?.is_flat_fee ?? false,
         reset_duration: apiKey?.reset_duration ?? 0,
     }));
     const [maxCostInput, setMaxCostInput] = useState(() =>
@@ -247,6 +248,15 @@ function APIKeyForm({ apiKey, isPending, submitLabel, onSubmit, onClose }: APIKe
                         {t('apiKey.form.unlimited')}
                     </button>
                 </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+                <span className="text-xs text-muted-foreground">Is Flat Fee</span>
+                <Switch
+                    checked={form.is_flat_fee ?? false}
+                    onCheckedChange={(checked) => updateForm({ is_flat_fee: checked })}
+                    disabled={isPending}
+                />
             </div>
 
             <div className="flex items-center justify-between pt-1">

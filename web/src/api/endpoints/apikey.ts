@@ -17,6 +17,7 @@ export interface APIKey {
     max_cost?: number;
     supported_models?: string;
     auto_reset_quota?: boolean;
+    is_flat_fee?: boolean;
     reset_duration?: number;
     next_reset_time?: number;
 }

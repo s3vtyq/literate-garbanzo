@@ -59,4 +59,7 @@ func Init() {
 			log.Warnf("relay log save db task failed: %v", err)
 		}
 	})
+
+	// 注册配额重置任务
+	Register("quota_reset", 1*time.Minute, true, CheckAndResetQuotas)
 }
