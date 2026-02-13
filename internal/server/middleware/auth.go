@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bestruirui/octopus/internal/conf"
+	"github.com/bestruirui/octopus/internal/helper"
 	"github.com/bestruirui/octopus/internal/op"
 	"github.com/bestruirui/octopus/internal/server/auth"
 	"github.com/bestruirui/octopus/internal/server/resp"
@@ -72,13 +73,15 @@ func APIKeyAuth() gin.HandlerFunc {
 
 		// Auto reset quota logic
 		if apiKeyObj.AutoResetQuota && apiKeyObj.ResetDuration > 0 {
-			now := time.Now().Unix()
+			now := time.Now()
+			nowUnix := now.Unix()
+			forceReset := apiKeyObj.ResetUnit == "day" && apiKeyObj.NextResetTime > 0 && !helper.IsAlignedToMidnight(apiKeyObj.NextResetTime)
 			if apiKeyObj.NextResetTime == 0 {
-				apiKeyObj.NextResetTime = now + apiKeyObj.ResetDuration
+				apiKeyObj.NextResetTime = helper.CalculateNextResetTime(now, apiKeyObj.ResetDuration, apiKeyObj.ResetUnit)
 				op.APIKeyUpdate(&apiKeyObj, c.Request.Context())
-			} else if now >= apiKeyObj.NextResetTime {
+			} else if nowUnix >= apiKeyObj.NextResetTime || forceReset {
 				if err := op.StatsAPIKeyReset(apiKeyObj.ID); err == nil {
-					apiKeyObj.NextResetTime = now + apiKeyObj.ResetDuration
+					apiKeyObj.NextResetTime = helper.CalculateNextResetTime(now, apiKeyObj.ResetDuration, apiKeyObj.ResetUnit)
 					op.APIKeyUpdate(&apiKeyObj, c.Request.Context())
 				}
 			}

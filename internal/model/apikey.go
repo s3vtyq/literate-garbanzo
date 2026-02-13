@@ -11,5 +11,6 @@ type APIKey struct {
 	SupportedModels string  `json:"supported_models,omitempty"`
 	AutoResetQuota  bool    `json:"auto_reset_quota" gorm:"default:false"`
 	ResetDuration   int64   `json:"reset_duration" gorm:"default:0"`
+	ResetUnit       string  `json:"reset_unit" gorm:"default:'minute'"`
 	NextResetTime   int64   `json:"next_reset_time" gorm:"default:0"`
 }

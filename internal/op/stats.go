@@ -296,8 +296,14 @@ func StatsAPIKeyReset(apiKeyID int) error {
 		APIKeyID: apiKeyID,
 	}
 	statsAPIKeyCache.Set(apiKeyID, apiKeyCache)
+
+	// Immediately save to DB
+	if err := db.GetDB().Save(&apiKeyCache).Error; err != nil {
+		return fmt.Errorf("failed to reset stats in DB: %w", err)
+	}
+
 	statsAPIKeyCacheNeedUpdateLock.Lock()
-	statsAPIKeyCacheNeedUpdate[apiKeyID] = struct{}{}
+	delete(statsAPIKeyCacheNeedUpdate, apiKeyID)
 	statsAPIKeyCacheNeedUpdateLock.Unlock()
 	return nil
 }
