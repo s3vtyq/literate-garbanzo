@@ -19,6 +19,7 @@ export interface APIKey {
     auto_reset_quota?: boolean;
     is_flat_fee?: boolean;
     reset_duration?: number;
+    reset_unit?: string;
     next_reset_time?: number;
 }
 

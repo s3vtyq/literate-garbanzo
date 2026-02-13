@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/bestruirui/octopus/internal/helper"
 	"github.com/bestruirui/octopus/internal/op"
 	"github.com/bestruirui/octopus/internal/utils/log"
 )
@@ -16,15 +17,17 @@ func CheckAndResetQuotas() {
 		return
 	}
 
-	now := time.Now().Unix()
+	now := time.Now()
+	nowUnix := now.Unix()
 	for _, key := range keys {
 		if key.AutoResetQuota && key.ResetDuration > 0 {
+			forceReset := key.ResetUnit == "day" && key.NextResetTime > 0 && !helper.IsAlignedToMidnight(key.NextResetTime)
 			if key.NextResetTime == 0 {
-				key.NextResetTime = now + key.ResetDuration
+				key.NextResetTime = helper.CalculateNextResetTime(now, key.ResetDuration, key.ResetUnit)
 				op.APIKeyUpdate(&key, ctx)
-			} else if now >= key.NextResetTime {
+			} else if nowUnix >= key.NextResetTime || forceReset {
 				if err := op.StatsAPIKeyReset(key.ID); err == nil {
-					key.NextResetTime = now + key.ResetDuration
+					key.NextResetTime = helper.CalculateNextResetTime(now, key.ResetDuration, key.ResetUnit)
 					if err := op.APIKeyUpdate(&key, ctx); err != nil {
 						log.Errorf("failed to update api key next reset time for key %s: %v", key.Name, err)
 					} else {

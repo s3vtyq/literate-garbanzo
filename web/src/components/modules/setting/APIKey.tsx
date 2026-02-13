@@ -99,6 +99,7 @@ function APIKeyForm({ apiKey, isPending, submitLabel, onSubmit, onClose }: APIKe
         auto_reset_quota: apiKey?.auto_reset_quota ?? false,
         is_flat_fee: apiKey?.is_flat_fee ?? false,
         reset_duration: apiKey?.reset_duration ?? 0,
+        reset_unit: apiKey?.reset_unit ?? 'day',
     }));
     const [maxCostInput, setMaxCostInput] = useState(() =>
         apiKey?.max_cost != null ? String(apiKey.max_cost) : ''
@@ -118,11 +119,21 @@ function APIKeyForm({ apiKey, isPending, submitLabel, onSubmit, onClose }: APIKe
     const [resetValue, setResetValue] = useState(() => {
         const d = apiKey?.reset_duration || 0;
         if (d === 0) return '1';
+        const unit = apiKey?.reset_unit;
+        if (unit === 'day') return (d / 86400).toString();
+        if (unit === 'hour') return (d / 3600).toString();
+        if (unit === 'minute') return (d / 60).toString();
+
         if (d % 86400 === 0) return (d / 86400).toString();
         if (d % 3600 === 0) return (d / 3600).toString();
         return (d / 60).toString();
     });
     const [resetUnit, setResetUnit] = useState(() => {
+        const unit = apiKey?.reset_unit;
+        if (unit === 'day') return '86400';
+        if (unit === 'hour') return '3600';
+        if (unit === 'minute') return '60';
+
         const d = apiKey?.reset_duration || 0;
         if (d === 0) return '86400';
         if (d % 86400 === 0) return '86400';
@@ -149,13 +160,20 @@ function APIKeyForm({ apiKey, isPending, submitLabel, onSubmit, onClose }: APIKe
         setForm((prev) => ({ ...prev, ...updater }));
     }, []);
 
-    // Update reset_duration when inputs change
+    // Update reset_duration and reset_unit when inputs change
     useEffect(() => {
         if (form.auto_reset_quota) {
             const val = parseFloat(resetValue);
-            const unit = parseInt(resetUnit);
-            if (!isNaN(val) && !isNaN(unit)) {
-                updateForm({ reset_duration: val * unit });
+            const unitValue = parseInt(resetUnit);
+            if (!isNaN(val) && !isNaN(unitValue)) {
+                let unit = 'minute';
+                if (unitValue === 86400) unit = 'day';
+                else if (unitValue === 3600) unit = 'hour';
+
+                updateForm({
+                    reset_duration: val * unitValue,
+                    reset_unit: unit
+                });
             }
         }
     }, [resetValue, resetUnit, form.auto_reset_quota, updateForm]);
